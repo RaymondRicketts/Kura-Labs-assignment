@@ -1,0 +1,179 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Resume Refiner",
+        "formDescription": "Modify resume to better match job description.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Resume",
+              "fieldType": "file",
+              "multipleFiles": false,
+              "acceptFileTypes": ".docx, .doc, .rtf, .txt., .pages",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Job",
+              "placeholder": "Paste Job link",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "placeholder": "example@gmail.com",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -448,
+        -48
+      ],
+      "id": "a2304c34-ebbb-4bf0-ab57-92c9f2273a06",
+      "name": "On form submission",
+      "webhookId": "2ae1f2a2-ce93-4300-b2ef-2e1b422754d0"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.Job }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -240,
+        -48
+      ],
+      "id": "caa49e86-582d-43f0-b483-131b586e56ae",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Your are an expert at aiding professionals with creating and editing their resumes. Your task is defined by the 3 steps below. You have permission to open files.\n\nStep 1: Analyze the following resume - {{ JSON.stringify($('On form submission').item.json.Resume) }}\n\nStep 2: Familiarize yourself with the content in {{ $json.data }} For more context, the data provided is a job posting.\n\nStep 3. Compare the resume provided in **Step 1** with the job posting data from **Step 2** and provide feedback on how to tailor the resume provided in **Step 1** to give the applicant the best chance of meeting the job description's qualifications.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        -48,
+        -48
+      ],
+      "id": "5b17b2e0-1464-45a0-a104-5df98461ab10",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        160
+      ],
+      "id": "27c55a51-d65c-4263-8fb9-cf4020249009",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "SHL2TJqgbMcz4uAE",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission').item.json.Email }}",
+        "subject": "Resume Refiner",
+        "emailType": "text",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        320,
+        -48
+      ],
+      "id": "bb28a2cb-6547-4e99-997e-d0461b7c727f",
+      "name": "Send a message",
+      "webhookId": "ab1375af-2573-44aa-a636-aeb748c9fc44",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "nsBFSzossaJM3KXT",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3ad152a9-9e99-4b86-81ca-e3f50b2ae43e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "60b9e4c53bc95c5aa36535ab0cb4b71419f2351a6bac190c50494ff6a63653fb"
+  },
+  "id": "NI30gBINIyNQh05C",
+  "tags": []
+}
